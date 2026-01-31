@@ -17,3 +17,7 @@ variable "vpc_id" {
 variable "ec2_instances_ids" {
   type = map(string)
 }
+
+variable "acm_certifcate_arn" {
+  type = string
+}
