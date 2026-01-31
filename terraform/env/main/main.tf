@@ -1,8 +1,8 @@
 terraform {
-  
+
   #   backend "s3" {
   #   bucket = ""
-  #   key = "dev/terraform.tfstate"
+  #   key = "main/terraform.tfstate"
   #   region = "us-east-2"
   #   dynamodb_table = ""
   #   encrypt = true
@@ -22,8 +22,8 @@ provider "aws" {
 }
 
 locals {
-  environment = "dev"
-  tag = "silas-dev"
+  environment = "main"
+  tag = "silas-main"
 }
 
 module "secrets_manager" {
@@ -40,7 +40,7 @@ module "ec2" {
 
   tags = local.tag
   ami = "ami-06e3c045d79fd65d9"
-  instance_type =  "c7i-flex.large" 
+  instance_type = "m7i-flex.large"
   vpc_id = module.vpc.vpc_id
   private_subnet_id_1 = module.vpc.subnets["private_subnet_1"]
   private_subnet_id_2 = module.vpc.subnets["private_subnet_2"]
