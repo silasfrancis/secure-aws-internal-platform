@@ -16,6 +16,10 @@ locals {
   tag = "silas-dev"
 }
 
+module "secrets_manager" {
+  source = "../../aws_modules/secrets_manager"
+}
+
 module "vpc" {
   source = "../../aws_modules/vpc"
   tags = local.tag
@@ -46,6 +50,8 @@ module "rds" {
   allocated_storage = 20
   storage_type = "gp2"
   db_name = "${local.tag}-db"
+  db_username = module.secrets_manager.db_secrets["db_username"]
+  db_password = module.secrets_manager.db_secrets["db_password"]
   vpc_security_group_ids = [module.vpc.security_group["rds"]]
 }
 
