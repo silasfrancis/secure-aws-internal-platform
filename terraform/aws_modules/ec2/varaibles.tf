@@ -25,7 +25,3 @@ variable "private_subnet_id_2" {
 variable "ec2_security_group_id" {
   type = list(string)
 }
-
-variable "iam_instance_profile" {
-  type = string
-}

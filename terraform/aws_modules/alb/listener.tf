@@ -19,12 +19,14 @@ resource "aws_lb_listener" "https" {
   protocol          = "HTTPS"
 
   ssl_policy      = "ELBSecurityPolicy-2016-08"
-  certificate_arn = var.acm_certifcate_arn
+  certificate_arn = aws_acm_certificate.lefrancis_org.arn
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.frontend_target_group.arn
+    target_group_arn = data.aws_acm_certificate.lefrancis_org.arn
   }
+
+  depends_on = [ data.aws_acm_certificate.lefrancis_org ]
 }
 
 resource "aws_lb_listener_rule" "api_lb_rule" {

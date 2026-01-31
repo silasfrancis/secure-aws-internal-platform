@@ -33,6 +33,6 @@ resource "aws_iam_role_policy_attachment" "ssm_core" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${var.tags}-ec2-profile"
+  name = "${var.tags}-ec2-profile" 
   role = aws_iam_role.ec2_ssm_role.name
 }
