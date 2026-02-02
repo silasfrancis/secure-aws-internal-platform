@@ -4,6 +4,7 @@ resource "aws_subnet" "public_subnet_1" {
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "${var.tags}-public1"
+    Tier = "public"
   }
   depends_on = [ aws_vpc.main_vpc ]
 }
@@ -14,6 +15,7 @@ resource "aws_subnet" "public_subnet_2" {
   cidr_block = "10.0.2.0/24"
   tags = {
     Name = "${var.tags}-public2"
+    Tier = "public"
   }
   depends_on = [ aws_vpc.main_vpc ]
 }
@@ -24,6 +26,7 @@ resource "aws_subnet" "private_subnet_1" {
   cidr_block = "10.0.11.0/24"
   tags = {
     Name = "${var.tags}-private1"
+    Tier = "private"
   }
   depends_on = [ aws_vpc.main_vpc ]
 }
@@ -34,6 +37,7 @@ resource "aws_subnet" "private_subnet_2" {
   cidr_block = "10.0.12.0/24"
   tags = {
     Name = "${var.tags}-private2"
+    Tier = "private"
   }
   depends_on = [ aws_vpc.main_vpc ]
 }

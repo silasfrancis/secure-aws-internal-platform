@@ -6,6 +6,9 @@ resource "aws_vpc_security_group_ingress_rule" "alb_ingress_http" {
   ip_protocol = "tcp"
   cidr_ipv4 = "0.0.0.0/0"
   depends_on = [ aws_security_group.alb ]
+  tags = {
+    Resource = "ALB"
+  }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_ingress_https" {
@@ -14,6 +17,9 @@ resource "aws_vpc_security_group_ingress_rule" "alb_ingress_https" {
   to_port = 443
   ip_protocol = "tcp"
   cidr_ipv4 = "0.0.0.0/0"
+    tags = {
+    Resource = "ALB"
+  }
   depends_on = [ aws_security_group.alb ]
 }
 
@@ -21,6 +27,9 @@ resource "aws_vpc_security_group_egress_rule" "alb_egress" {
   security_group_id = aws_security_group.alb.id
   ip_protocol = "-1"
   cidr_ipv4 = "0.0.0.0/0"
+    tags = {
+    Resource = "ALB"
+  }
   depends_on = [ aws_security_group.alb ]
 }
 
@@ -31,7 +40,10 @@ resource "aws_vpc_security_group_ingress_rule" "ec2_ingress_rule_api" {
     to_port = 8080
     ip_protocol = "tcp"
     referenced_security_group_id = aws_security_group.alb.id
-    depends_on = [ aws_security_group.ec2 ]
+    tags = {
+    Resource = "EC2"
+  }
+  depends_on = [ aws_security_group.ec2 ]
 }
 
 resource "aws_vpc_security_group_ingress_rule" "ec2_ingress_rule_app" {
@@ -40,14 +52,20 @@ resource "aws_vpc_security_group_ingress_rule" "ec2_ingress_rule_app" {
     to_port = 3000
     ip_protocol = "tcp"
     referenced_security_group_id = aws_security_group.alb.id
-    depends_on = [ aws_security_group.ec2 ]
+    tags = {
+    Resource = "EC2"
+  }
+  depends_on = [ aws_security_group.ec2 ]
 }
 
 resource "aws_vpc_security_group_egress_rule" "ec2_egress_rule" {
   security_group_id = aws_security_group.ec2.id
   ip_protocol = "-1"
   cidr_ipv4 = "0.0.0.0/0"
-    depends_on = [ aws_security_group.ec2 ]
+  tags = {
+    Resource = "EC2"
+  }
+  depends_on = [ aws_security_group.ec2 ]
 }
 
 # rds
@@ -57,6 +75,9 @@ resource "aws_vpc_security_group_ingress_rule" "rds_ingress_rule" {
     to_port = 5432
     ip_protocol = "tcp"
     referenced_security_group_id = aws_security_group.ec2.id
+    tags = {
+    Resource = "RDS"
+    }
     depends_on = [ aws_security_group.rds ]
 }
 
@@ -64,5 +85,8 @@ resource "aws_vpc_security_group_egress_rule" "rds_egress_rule" {
   security_group_id = aws_security_group.rds.id
   ip_protocol = "-1"
   cidr_ipv4 = "0.0.0.0/0"
+  tags = {
+    Resource = "RDS"
+    }
   depends_on = [ aws_security_group.rds ]
 }

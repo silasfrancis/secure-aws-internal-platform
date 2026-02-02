@@ -21,6 +21,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "s3_bucket_config" {
     rule {
       id = var.bucket_rule_id
       status = var.bucket_rule_status
+      abort_incomplete_multipart_upload {
+        days_after_initiation = var.bucket_exp_days
+      }
       expiration {
         days = var.bucket_exp_days
       }

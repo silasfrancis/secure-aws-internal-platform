@@ -10,9 +10,9 @@ terraform {
 resource "aws_db_subnet_group" "private_subnets" {
   name = "${var.tags}-rds-subnet-group"
   subnet_ids = var.private_subnet_ids
-tags = {
-    Name = "${var.tags}-rds-subnet-group"
-  }
+  tags = {
+      Name = "${var.tags}-rds-subnet-group"
+    }
 }
 
 resource "aws_db_instance" "postgres" {

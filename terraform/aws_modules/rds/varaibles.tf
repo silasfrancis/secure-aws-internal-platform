@@ -30,10 +30,12 @@ variable "db_name" {
 
 variable "db_username" {
   type = string
+  sensitive = true
 }
 
 variable "db_password" {
   type = string
+  sensitive = true
 }
 
 variable "vpc_security_group_ids" {
