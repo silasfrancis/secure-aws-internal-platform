@@ -1,0 +1,11 @@
+*.terraform/
+*terraform.tfstate
+*tfplan
+*plan.json
+*.terraform.lock.hcl
+
+# Terraform CLI config (optional)
+.terraformrc
+terraform.rc
+
+
