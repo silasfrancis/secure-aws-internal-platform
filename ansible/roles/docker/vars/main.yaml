@@ -1,0 +1,7 @@
+env: dev
+
+docker_compose_files:
+  dev:
+    - docker-compose.dev.yml
+  main:
+    - docker-compose.main.yml

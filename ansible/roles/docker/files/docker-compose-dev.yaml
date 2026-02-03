@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  fast_api:
+    image:        
+    container_name: fastapi
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${DBNAME}
+      POSTGRES_USER: ${DBUSER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PORT: 5432
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        uvicorn conduit.app:app --host 0.0.0.0 --port 8000
+      "
+    ports:
+      - "8080:8000"                  
+    depends_on:
+      - postgres                     
+
+  react_app:
+    image:      
+    container_name: react_app
+    environment:
+      HOST: ${CLIENT_HOST}
+      PORT: ${CLIENT_PORT}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING}
+      BROWSER: none
+    ports:
+      - "3000:3000"
+    depends_on:
+      - fast_api

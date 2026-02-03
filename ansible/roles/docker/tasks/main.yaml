@@ -1,0 +1,33 @@
+- name: Install Docker
+  package:
+    name: docker
+    state: present
+
+- name: Ensure Docker is started and enabled
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Get DB secrets from AWS
+  shell: aws secretsmanager get-secret-value --secret-id my-db-secret --query SecretString --output text
+  register: db_secret
+
+- name: Parse DB secrets
+  set_fact:
+    db_secrets: "{{ db_secret.stdout | from_json }}"
+
+- name: Deploy application via Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: ./files
+    files: "{{ docker_compose_files[env] }}"
+    state: present
+    pull: yes
+    environment:
+      POSTGRES_USER: "{{ db_secrets.DB_USER }}"
+      POSTGRES_PASSWORD: "{{ db_secrets.DB_PASSWORD }}"
+      SECRET_KEY: "{{ db_secrets.SECRET_KEY }}"
+      JWT_SECRET_KEY: "{{ db_secrets.JWT_SECRET_KEY }}"
+      POSTGRES_HOST: "{{ db_secrets.DB_HOST }}"
+      POSTGRES_DB: "{{ db_secrets.DB_NAME }}"
+
