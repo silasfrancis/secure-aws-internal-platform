@@ -1,0 +1,121 @@
+name: Update Docker Compose Images
+
+on:
+    workflow_run:
+        workflows:
+            - Scan Container Images
+        types:
+            - completed
+
+jobs:
+  filter-updated-directories:
+    runs-on: ubuntu-24.04
+    if: |
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    outputs:
+        dir_changed: ${{ steps.filter_files.outputs.changes}}
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 #v6.0.1
+
+        - name: Filter changed files
+          id: filter_files
+          uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+          with:
+                token: ${{ github.token || secrets.GITHUB_TOKEN }}
+                filters: .github/workflows/utils/filefilter.yaml
+            
+  update-gitops:
+    runs-on: ubuntu-24.04
+    if: ${{ needs.filter-updated-directories.outputs.dir_changed != '[]' && needs.filter-updated-directories.outputs.dir_changed != ''}}
+    needs: filter-updated-directories
+    permissions:
+      contents: write
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 #v6.0.1
+        
+        - name: Install jq
+          uses:  supplypike/setup-bin@1fafb085795af4a3f183502f3a9dffa8f7b83217
+          with:
+            uri: "https://github.com/jqlang/jq/releases/download/jq-1.8.1/jq-linux-amd64"
+            name: "jq"
+            version: "1.8.1"
+
+        - name: Install yq
+          uses:  supplypike/setup-bin@1fafb085795af4a3f183502f3a9dffa8f7b83217
+          with:
+            uri: "https://github.com/mikefarah/yq/releases/download/v4.50.1/yq_linux_amd64.tar.gz"
+            name: "yq"
+            version: v4.50.1
+
+        - run: |
+            jq --version
+            yq --version
+
+        - name: cleanup service name
+          id: svc
+          run: echo "SERVICE_NAME=$(echo '${{ matrix.dir_changed }}' | sed 's|.*/||')" >> $GITHUB_OUTPUT
+
+        - name: Update docker compose values for all services
+          id: update_docker_compose_values
+          run: | 
+            ENVIRONMENT="${{ github.ref_name }}"
+            SERVICE_NAME="${{ steps.svc.outputs.SERVICE_NAME }}"
+            TARGET_DIR="utils/docker_compose/$ENVIRONMENT"
+            VALUES_FILE="$TARGET_DIR/docker-compose.yaml"
+            TARGET_FILE="$TARGET_DIR/$SERVICE_NAME.json"
+            
+            echo $VALUES_FILE
+            echo $TARGET_FILE
+            echo "VALUES_FILE=$VALUES_FILE" >> $GITHUB_OUTPUT
+
+              SERVICE=$(jq -r '.service' "$TARGET_FILE")
+              IMAGE_TAG=$(jq -r '.image_tag' "$TARGET_FILE")
+
+              echo "Processing: $TARGET_FILE"
+              echo "Service: $SERVICE"
+              echo "Image Tag: $IMAGE_TAG"
+
+              echo "Updating $SERVICE -> $IMAGE_TAG"
+
+              # Update image values using yq
+              if [[ "$SERVICE" == *"fastapi"* ]]; then
+                CURRENT=$(yq '.fast_api.image' "$VALUES_FILE")
+                echo "Current fastapi image: $CURRENT"
+                yq -i '.fast_api.image = "'"$IMAGE_TAG"'"' "$VALUES_FILE"
+              elif [[ "$SERVICE" == *"react-recoil"* ]]; then
+                CURRENT=$(yq '.react_app.image' "$VALUES_FILE")
+                echo "Current react app image: $CURRENT"
+                yq -i '.react_app.image = "'"$IMAGE_TAG"'"' "$VALUES_FILE"
+              else
+                echo "Unknown service: $SERVICE, skipping"
+              fi
+            done
+
+            echo "Contents after update:"
+            cat "$VALUES_FILE"
+
+            echo "Git diff:"
+            git diff "$VALUES_FILE"
+          
+        - name: Commit and push Helm updates
+          env: 
+            GIT_USER: ${{ github.actor }}
+            GIT_USER_EMAIL: ${{ vars.GIT_USER_EMAIL }}
+          run: |
+                VALUES_FILE="${{ steps.update_docker_compose_values.outputs.VALUES_FILE }}"
+                git config user.name "$GIT_USER"
+                git config user.email "$GIT_USER_EMAIL"
+
+                echo "Staging changes..."
+                git add "$VALUES_FILE"
+
+                if git diff --cached --quiet; then
+                  echo "No changes to commit"
+                else
+                  git commit -m "Update Helm images for ${{ github.ref_name }}"
+                  git pull --rebase origin ${{ github.ref_name }}
+                  git push https://x-access-token:${{github.token}}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
+                fi

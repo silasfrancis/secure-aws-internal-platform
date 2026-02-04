@@ -1,0 +1,81 @@
+name: Semgrep and OWASP Dependency-Check
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  filter-updated-directories:
+    runs-on: ubuntu-24.04
+    outputs:
+        dir_changed: ${{ steps.filter_files.outputs.changes}}
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 
+
+        - name: Filter changed files
+          id: filter_files
+          uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+          with:
+                token: ${{ github.token || secrets.GITHUB_TOKEN }}
+                filters: .github/workflows/utils/filefilter.yaml
+
+  semgrep:
+    runs-on: ubuntu-24.04
+    if: ${{ needs.filter-updated-directories.outputs.dir_changed != '[]' && needs.filter-updated-directories.outputs.dir_changed != ''}}
+    needs: filter-updated-directories
+    strategy:
+        fail-fast: false
+        matrix:
+            dir_changed: ${{ fromJson(needs.filter-updated-directories.outputs.dir_changed) }}
+    permissions:
+      contents: read
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+    container:
+      image: semgrep/semgrep
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 
+
+        - name: Run Semgrep CI
+          run: semgrep ci --config auto ${{ matrix.dir_changed }}
+    
+  dependency-check:
+    runs-on: ubuntu-24.04
+    if: ${{ needs.filter-updated-directories.outputs.dir_changed != '[]' && needs.filter-updated-directories.outputs.dir_changed != ''}}
+    needs: filter-updated-directories
+    strategy:
+        fail-fast: false
+        matrix:
+            dir_changed: ${{ fromJson(needs.filter-updated-directories.outputs.dir_changed) }}
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+            
+        - name: Build project with Maven
+          run: mvn clean install
+
+        - name: Run OWASP Dependency-Check
+          uses: dependency-check/Dependency-Check_Action@main
+          id: Depcheck
+          with:
+            project: 'MyProject-${{ matrix.dir_changed }}'
+            path: '${{ matrix.dir_changed }}'
+            format: 'HTML'
+            out: 'reports'
+            args: >
+                --failOnCVSS 7
+                --enableRetired
+
+        - name: Upload Test results
+          uses: actions/upload-artifact@v4
+          with:
+            name: Depcheck-report-${{ matrix.dir_changed }}
+            path: ${{ github.workspace }}/reports

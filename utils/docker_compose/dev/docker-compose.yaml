@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   fast_api:
-    image:        
+    image: ee    
     container_name: fastapi
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
@@ -23,7 +23,7 @@ services:
       - postgres                     
 
   react_app:
-    image:      
+    image: ee
     container_name: react_app
     environment:
       HOST: ${CLIENT_HOST}
