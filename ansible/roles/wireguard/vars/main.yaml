@@ -1,0 +1,6 @@
+client_1: silasfrancis
+client_2: samuelsilas
+
+client_ip_map:
+  client1: 10.8.0.2
+  client2: 10.8.0.3

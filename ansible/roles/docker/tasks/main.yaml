@@ -10,7 +10,7 @@
     enabled: yes
 
 - name: Get DB secrets from AWS
-  shell: aws secretsmanager get-secret-value --secret-id my-db-secret --query SecretString --output text
+  shell: aws secretsmanager get-secret-value --secret-id {{ aws_secret_id }} --query SecretString --output text
   register: db_secret
 
 - name: Parse DB secrets

@@ -1,0 +1,197 @@
+- name: Install WireGuard
+  shell: |
+         apt install -y wireguard wireguard-tools
+  become: true
+
+- name: Ensure WireGuard directory exists
+  file:
+    path: /etc/wireguard
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+  become: true
+
+# sever keys
+
+# private key
+- name: Generate server private key if missing
+  command: wg genkey
+  register: server_private_key_generated
+  args:
+    creates: /etc/wireguard/server_private.key
+  become: true
+
+- name: Save server private key
+  copy:
+    content: "{{ server_private_key_generated.stdout }}"
+    dest: /etc/wireguard/server_private.key
+    owner: root
+    group: root
+    mode: '0600'
+  when: server_private_key_generated is changed
+  become: true
+
+# public key
+- name: Generate server public key if missing
+  command: wg pubkey
+  args:
+    stdin: "{{ lookup('file', '/etc/wireguard/server_private.key') }}"
+    creates: /etc/wireguard/server_public.key
+  register: server_public_key_generated
+  become: true
+
+- name: Save server public key
+  copy:
+    content: "{{ server_public_key_generated.stdout }}"
+    dest: /etc/wireguard/server_public.key
+    owner: root
+    group: root
+    mode: '0644'
+  when: server_public_key_generated is changed
+  become: true
+
+# client keys
+- name: Ensure clients directory exists
+  file:
+    path: /etc/wireguard/clients
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+  become: true
+
+- name: Generate client private key
+  command: wg genkey
+  args:
+    creates: /etc/wireguard/clients/{{ item }}_private.key
+  register: client_private_key_generated
+  loop:
+    - "{{ client_1 }}"
+    - "{{ client_2 }}"
+  loop_control:
+    label: "{{ item }}"
+  become: true
+
+- name: Save client private key
+  copy:
+    content: "{{ client_private_key_generated.stdout }}"
+    dest: /etc/wireguard/clients/{{ item }}_private.key
+    owner: root
+    group: root
+    mode: '0600'
+  loop:
+    - "{{ client_1 }}"
+    - "{{ client_2 }}"
+  loop_control:
+    label: "{{ item }}"
+  when: client_private_key_generated is changed
+  become: true
+
+- name: Generate client public key
+  command: wg pubkey
+  args:
+    stdin: "{{ lookup('file', '/etc/wireguard/clients/' + item + '_private.key') }}"
+    creates: /etc/wireguard/clients/{{ item }}_public.key
+  register: client_public_key_generated
+  loop:
+    - "{{ client_1 }}"
+    - "{{ client_2 }}"
+  loop_control:
+    label: "{{ item }}"
+  become: true
+
+- name: Save client public key
+  copy:
+    content: "{{ client_public_key_generated.stdout }}"
+    dest: /etc/wireguard/clients/{{ item }}_public.key
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - "{{ client_1 }}"
+    - "{{ client_2 }}"
+  loop_control:
+    label: "{{ item }}"
+  when: client_public_key_generated is changed
+  become: true
+  
+- name: Read client public keys
+  command: cat /etc/wireguard/clients/{{ item }}_public.key
+  loop:
+    - "{{ client_1 }}"
+    - "{{ client_2 }}"
+  register: wg_client_public_keys
+  become: true
+
+- name: Read client private keys
+  command: cat /etc/wireguard/clients/{{ item }}_private.key
+  loop:
+    - "{{ client_1 }}"
+    - "{{ client_2 }}"
+  register: wg_client_private_keys
+  become: true
+
+- name: Build client public key mapping
+  set_fact:
+    client_public_key_mapping: >-
+      {{
+        client_public_key_mapping | default({}) |
+        combine({ item.item: item.stdout })
+      }}
+  loop: "{{ wg_client_public_keys.results }}"
+
+- name: Build client private key mapping
+  set_fact:
+    client_private_key_mapping: >-
+      {{
+        client_private_key_mapping | default({}) |
+        combine({ item.item: item.stdout })
+      }}
+  loop: "{{ wg_client_private_keys.results }}"
+
+# IP forwarding
+- name: Enable IP Forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: yes
+  become: true
+
+- name: Show IPv4 forwarding status
+  debug:
+    msg: "IPv4 forwarding is enabled: {{ ip_forward_status.stdout }}"
+
+# WireGuard configuration
+- name: Create WireGuard server configuration
+  template:
+    src: wgo.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+
+# start WireGuard
+- name: Start and enable WireGuard
+  command: wg-quick up wg0
+  become: true
+
+- name: Check WireGuard status
+  command: wg show
+  register: wg_status
+  become: true
+
+- name: Enable auto start for WireGuard
+  systemd:
+    name: wg-quick@wg0
+    enabled: true
+    state: started
+  become: true
+
+- name: Check wiregaurd is running
+  command: wg show wg0
+  register: wg_check
+  become: true
+
