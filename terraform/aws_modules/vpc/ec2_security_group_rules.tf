@@ -1,0 +1,33 @@
+resource "aws_vpc_security_group_ingress_rule" "ec2_ingress_rule_api" {
+    security_group_id = aws_security_group.ec2.id
+    from_port = 8080
+    to_port = 8080
+    ip_protocol = "tcp"
+    referenced_security_group_id = aws_security_group.alb.id
+    tags = {
+    Resource = "EC2"
+  }
+  depends_on = [ aws_security_group.ec2 ]
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ec2_ingress_rule_app" {
+    security_group_id = aws_security_group.ec2.id
+    from_port = 3000
+    to_port = 3000
+    ip_protocol = "tcp"
+    referenced_security_group_id = aws_security_group.alb.id
+    tags = {
+    Resource = "EC2"
+  }
+  depends_on = [ aws_security_group.ec2 ]
+}
+
+resource "aws_vpc_security_group_egress_rule" "ec2_egress_rule" {
+  security_group_id = aws_security_group.ec2.id
+  ip_protocol = "-1"
+  cidr_ipv4 = "0.0.0.0/0"
+  tags = {
+    Resource = "EC2"
+  }
+  depends_on = [ aws_security_group.ec2 ]
+}

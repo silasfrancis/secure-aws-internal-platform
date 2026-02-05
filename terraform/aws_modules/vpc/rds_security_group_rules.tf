@@ -1,0 +1,22 @@
+resource "aws_vpc_security_group_ingress_rule" "rds_ingress_rule" {
+    security_group_id = aws_security_group.rds.id
+    from_port = 5432
+    to_port = 5432
+    ip_protocol = "tcp"
+    referenced_security_group_id = aws_security_group.ec2.id
+    tags = {
+    Resource = "RDS"
+    }
+    depends_on = [ aws_security_group.rds ]
+}
+
+resource "aws_vpc_security_group_egress_rule" "rds_egress_rule" {
+  security_group_id = aws_security_group.rds.id
+  ip_protocol = "-1"
+  cidr_ipv4 = "0.0.0.0/0"
+  tags = {
+    Resource = "RDS"
+    }
+  depends_on = [ aws_security_group.rds ]
+}
+
