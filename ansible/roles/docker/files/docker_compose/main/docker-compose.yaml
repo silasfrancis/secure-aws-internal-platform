@@ -1,14 +1,13 @@
-version: "3.9"
-
 services:
   fast_api:
     image:        
     container_name: fastapi
+    pull_policy: always
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_DB: ${DBNAME}
-      POSTGRES_USER: ${DBUSER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: devdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_PORT: 5432
       SECRET_KEY: ${SECRET_KEY}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
@@ -18,13 +17,12 @@ services:
         uvicorn conduit.app:app --host 0.0.0.0 --port 8000
       "
     ports:
-      - "8080:8000"                  
-    depends_on:
-      - postgres                     
+      - "8080:8000"                                       
 
   react_app:
     image:      
     container_name: react_app
+    pull_policy: always
     environment:
       HOST: "0.0.0.0"
       PORT: 3000

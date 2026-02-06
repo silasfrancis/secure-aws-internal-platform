@@ -35,7 +35,7 @@ resource "aws_db_instance" "postgres" {
   multi_az = true
   publicly_accessible = false
   storage_encrypted = true
-
+  skip_final_snapshot = true
 
   tags = {
     Name = "${var.tags}-postgres"
