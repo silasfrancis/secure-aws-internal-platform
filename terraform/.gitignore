@@ -3,6 +3,7 @@
 *tfplan
 *plan.json
 *.terraform.lock.hcl
+*terraform.tfstate*
 
 # Terraform CLI config (optional)
 .terraformrc

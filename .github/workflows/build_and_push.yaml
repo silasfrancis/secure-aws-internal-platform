@@ -134,7 +134,7 @@ jobs:
           run: |
             set -e
 
-            TARGET_DIR="utils/docker_compose/$ENVIRONMENT"
+            TARGET_DIR="ansible/roles/docker/files/docker_compose/$ENVIRONMENT"
 
             TARGET_FILE="$TARGET_DIR/$SERVICE_NAME.json"
 

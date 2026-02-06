@@ -1,11 +1,3 @@
-resource "aws_eip" "nat_eip_1" {
-  domain = "vpc"
-}
-
-resource "aws_eip" "nat_eip_2" {
-  domain = "vpc"
-}
-
 resource "aws_nat_gateway" "nat_1" {
   allocation_id = aws_eip.nat_eip_1.id
   subnet_id = aws_subnet.public_subnet_1.id
@@ -19,7 +11,7 @@ resource "aws_nat_gateway" "nat_2" {
 }
 
 resource "aws_route_table" "private_1" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main_vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"
@@ -32,7 +24,7 @@ resource "aws_route_table" "private_1" {
 }
 
 resource "aws_route_table" "private_2" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main_vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"

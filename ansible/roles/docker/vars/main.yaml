@@ -2,8 +2,8 @@ env: dev
 
 docker_compose_files:
   dev:
-    - utils/docker_compose/dev/docker-compose.yaml
+    - docker_compose/dev/docker-compose.yaml
   main:
-    - utils/docker_compose/main/docker-compose.yaml
+    - docker_compose/main/docker-compose.yaml
 
-aws_secret_id: my-db-secret
+aws_secret_id: basic_secrets

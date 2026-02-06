@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   fast_api:
-    image: ee    
+    image:        
     container_name: fastapi
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
@@ -23,13 +23,12 @@ services:
       - postgres                     
 
   react_app:
-    image: ee
+    image:      
     container_name: react_app
     environment:
-      HOST: ${CLIENT_HOST}
-      PORT: ${CLIENT_PORT}
-      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING}
-      BROWSER: none
+      HOST: "0.0.0.0"
+      PORT: 3000
+      CHOKIDAR_USEPOLLING: true
     ports:
       - "3000:3000"
     depends_on:

@@ -1,6 +1,5 @@
 - name: Run PostgreSQL migration on RDS
-  hosts: localhost
-  connection: local
+  hosts: application
   gather_facts: false
   vars:
     sql_dump_path: backend/postgres_db/sql/001_database_dump.sql

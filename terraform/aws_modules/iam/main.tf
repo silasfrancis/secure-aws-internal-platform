@@ -9,7 +9,7 @@ terraform {
 
 resource "aws_iam_role" "ec2_role" {
   name = "${var.tags}-ec2-ssm-role"
-  assume_role_policy = jsondecode({
+  assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
         {
@@ -37,7 +37,7 @@ resource "aws_iam_policy" "secrets_policy" {
       Action = [
         "secretsmanager:GetSecretValue"
       ]
-      Resource = "arn:aws:secretsmanager:*:*:secret:my-db-secret-*"
+      Resource = "arn:aws:secretsmanager:*:*:secret:basic_secrets*"
     }]
   })
 }

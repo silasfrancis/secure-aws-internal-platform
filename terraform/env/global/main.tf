@@ -1,13 +1,13 @@
 terraform {
   
-  #   backend "s3" {
-  #   bucket = ""
-  #   key = "global/terraform.tfstate"
-  #   region = "us-east-2"
-  #   dynamodb_table = ""
-  #   encrypt = true
+    backend "s3" {
+    bucket = "silas-global-silas-global"
+    key = "global/terraform.tfstate"
+    region = "us-east-2"
+    use_lockfile = true
+    encrypt = true
     
-  # }
+  }
 
   required_providers {
     aws = {

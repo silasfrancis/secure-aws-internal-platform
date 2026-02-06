@@ -2,11 +2,12 @@ version: "3.9"
 
 services:
   fast_api:
-    image:        
+    image: silasfrancis/devops-api-dev:ddce371-0000-gddce371    
     container_name: fastapi
+    pull_policy: always
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_DB: ${DBNAME}
+      POSTGRES_DB: devdb
       POSTGRES_USER: ${DBUSER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_PORT: 5432
@@ -23,13 +24,13 @@ services:
       - postgres                     
 
   react_app:
-    image:      
+    image: silasfrancis/devops-client-dev:ddce371-0000-gddce371
     container_name: react_app
+    pull_policy: always
     environment:
-      HOST: ${CLIENT_HOST}
-      PORT: ${CLIENT_PORT}
-      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING}
-      BROWSER: none
+      HOST: "0.0.0.0"
+      PORT: 3000
+      CHOKIDAR_USEPOLLING: true
     ports:
       - "3000:3000"
     depends_on:

@@ -90,7 +90,7 @@ jobs:
             ENVIRONMENT: ${{ github.ref_name }}
           run: |
             cd terraform/env/${ENVIRONMENT}
-            terraform apply -auto-approve tfplan
+            terraform apply -auto-approve
 
 
 

@@ -63,7 +63,7 @@ jobs:
           run: | 
             ENVIRONMENT="${{ github.ref_name }}"
             SERVICE_NAME="${{ steps.svc.outputs.SERVICE_NAME }}"
-            TARGET_DIR="utils/docker_compose/$ENVIRONMENT"
+            TARGET_DIR="ansible/roles/docker/files/docker_compose/$ENVIRONMENT"
             VALUES_FILE="$TARGET_DIR/docker-compose.yaml"
             TARGET_FILE="$TARGET_DIR/$SERVICE_NAME.json"
             

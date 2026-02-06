@@ -4,7 +4,7 @@ terraform {
   #   bucket = ""
   #   key = "dev/terraform.tfstate"
   #   region = "us-east-2"
-  #   dynamodb_table = ""
+  #   use_lockfile = true
   #   encrypt = true
     
   # }
@@ -44,7 +44,10 @@ module "ec2" {
   vpc_id = module.vpc.vpc_id
   private_subnet_id_1 = module.vpc.subnets["private_subnet_1"]
   private_subnet_id_2 = module.vpc.subnets["private_subnet_2"]
-  ec2_security_group_id = module.vpc.security_group["ec2"]
+  ec2_security_group_id = [module.vpc.security_group["ec2"]]
+  wireguard_instance_type = "t3.micro"
+  wireguard_security_group_id = [module.vpc.security_group["wireguard"]]
+  public_subnet_id_1 = module.vpc.subnets["public_subnet_1"]
 }
 
 module "rds" {
@@ -59,7 +62,7 @@ module "rds" {
   engine_version = "15"
   allocated_storage = 20
   storage_type = "gp2"
-  db_name = "${local.tag}-db"
+  db_name = "${local.environment}db"
   db_username = module.secrets_manager.db_secrets["db_username"]
   db_password = module.secrets_manager.db_secrets["db_password"]
   vpc_security_group_ids = [module.vpc.security_group["rds"]]
@@ -93,10 +96,10 @@ module "s3" {
   s3_server_sse_algorithm = "AES256"
 }
 
-module "dynamodb" {
-  source = "../../aws_modules/dynamodb"
+# module "dynamodb" {
+#   source = "../../aws_modules/dynamodb"
 
-  table_name = "${local.tag}db"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key = "object_key"
-}
+#   table_name = "${local.tag}db"
+#   billing_mode = "PAY_PER_REQUEST"
+#   hash_key = "object_key"
+# }

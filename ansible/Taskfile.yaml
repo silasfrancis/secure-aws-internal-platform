@@ -1,0 +1,40 @@
+version: "3"
+
+tasks:
+  ansible_env_setup:
+    cmds:
+      - python3 -m venv ~/ansible-venv
+
+      # activate env
+      # source ~/ansible-venv/bin/activate
+
+  install_boto3:
+    cmds:
+      - pip install --upgrade pip
+      - pip install ansible boto3 botocore
+    desc: Install Boto3 for AWS interactions
+
+  ansible_ping:
+    cmds:
+      - ansible all -i inventory.yaml -m ping
+    desc: Test Ansible connectivity to all hosts
+  
+  ansible_nginx:
+    cmds:
+      - ansible-playbook -i inventory.yaml nginx.yaml
+    desc: Set up Nginx on application instances 
+  
+  ansible_docker:
+    cmds:
+      - ansible-playbook -i inventory.yaml docker.yaml
+    desc: Set up Docker on application instances
+  
+  ansible_rds_migration:
+    cmds:
+      - ansible-playbook -i inventory.yaml rds_migration.yaml
+    desc: Run PostgreSQL migration on RDS
+
+  ansible_wireguard:
+    cmds:
+      - ansible-playbook -i inventory.yaml wireguard.yaml
+    desc: Set up WireGuard on wireguard instance

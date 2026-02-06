@@ -4,7 +4,7 @@ terraform {
   #   bucket = ""
   #   key = "main/terraform.tfstate"
   #   region = "us-east-2"
-  #   dynamodb_table = ""
+  #   use_lockfile = true
   #   encrypt = true
     
   # }
@@ -45,6 +45,9 @@ module "ec2" {
   private_subnet_id_1 = module.vpc.subnets["private_subnet_1"]
   private_subnet_id_2 = module.vpc.subnets["private_subnet_2"]
   ec2_security_group_id = module.vpc.security_group["ec2"]
+  wireguard_instance_type = "t3.micro"
+  wireguard_security_group_id = module.vpc.security_group["wireguard"]
+  public_subnet_id_1 = module.vpc.subnets["public_subnet_1"]
 }
 
 module "rds" {
