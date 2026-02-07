@@ -28,14 +28,10 @@ jobs:
       cancel-in-progress: false
     steps:
         - name: Checkout code
-          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 #v6.0.1
+          uses: ./.github/actions/checkout
 
         - name: Install task
-          uses:  supplypike/setup-bin@1fafb085795af4a3f183502f3a9dffa8f7b83217
-          with:
-            uri: "https://github.com/go-task/task/releases/download/v3.46.4/task_linux_amd64.tar.gz"
-            name: "task"
-            version: v3.46.4
+          uses:  ./.github/actions/install_task
 
         - name: Auth to Docker Hub
           if: ${{ !env.ACT }}
@@ -105,7 +101,9 @@ jobs:
         
         - name: cleanup service name
           id: svc
-          run: echo "SERVICE_NAME=$(echo '${{ matrix.dir_changed }}' | sed 's|.*/||')" >> $GITHUB_OUTPUT
+          uses: ./.github/actions/cleanup_service_name
+          with:
+            services: ${{ matrix.dir_changed }}
 
         - name: Persist build info to repo
           env:
