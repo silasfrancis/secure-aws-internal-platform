@@ -13,8 +13,9 @@ on:
 
 jobs:
   filter-updated-directories:
-    uses: silasfrancis/network_app/.github/workflows/reuseable_jobs/filter_updated_dir.yaml
-  
+    uses: ./.github/workflows/filter_updated_dir.yaml
+
+
   build-and-push:
     runs-on: ubuntu-24.04
     if: ${{ needs.filter-updated-directories.outputs.dir_changed != '[]' && needs.filter-updated-directories.outputs.dir_changed != ''}}

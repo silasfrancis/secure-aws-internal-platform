@@ -1,6 +1,6 @@
 backend/fastapi:
     - backend/fastapi/**
-    - .github/workflows/build-push.yaml
+    - .github/workflows/build_and_push.yaml
 frontend/react-recoil:
     - frontend/react-recoil/**
-    - .github/workflows/build-push.yaml 
+    - .github/workflows/build_and_push.yaml
