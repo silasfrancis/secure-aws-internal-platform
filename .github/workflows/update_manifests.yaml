@@ -26,7 +26,7 @@ jobs:
       cancel-in-progress: false
     steps:
         - name: Checkout code
-          uses: ./.github/actions/checkout
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 #v6.0.1
         
         - name: Setup jq and yq
           uses: ./.github/actions/install_jq_yp

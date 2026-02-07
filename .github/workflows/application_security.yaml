@@ -45,7 +45,7 @@ jobs:
             dir_changed: ${{ fromJson(needs.filter-updated-directories.outputs.dir_changed) }}
     steps:
         - name: Checkout code
-          uses: ./.github/actions/checkout
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 
 
         - name: Run OWASP Dependency-Check
           uses: dependency-check/Dependency-Check_Action@main

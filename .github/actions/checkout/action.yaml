@@ -1,8 +1,0 @@
-name: "Checkout code"
-description: "Checks out the repository code to the GitHub Actions runner."
-
-runs:
-  using: "composite"
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 #v6.0.1
