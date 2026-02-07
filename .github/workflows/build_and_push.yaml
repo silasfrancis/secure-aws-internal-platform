@@ -6,10 +6,6 @@ on:
         - Semgrep and OWASP Dependency-Check
       types:
         - completed
-    push:
-        branches:
-        - main
-        - dev
 
 jobs:
   filter-updated-directories:

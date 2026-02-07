@@ -32,6 +32,13 @@ jobs:
     needs: filter-updated-directories
     permissions:
       contents: write
+    strategy:
+        fail-fast: false
+        matrix:
+            dir_changed: ${{ fromJson(needs.filter-updated-directories.outputs.dir_changed) }}
+    concurrency:
+      group: git-write-${{ github.ref_name }}-${{ matrix.dir_changed }}
+      cancel-in-progress: false
     steps:
         - name: Checkout code
           uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 #v6.0.1

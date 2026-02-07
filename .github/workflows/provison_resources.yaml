@@ -6,10 +6,6 @@ on:
         - Scan Container Images
       types:
         - completed
-    push:
-        branches:
-        - main
-        - dev
 
 jobs:
   chekov-scan:
