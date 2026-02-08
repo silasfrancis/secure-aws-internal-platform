@@ -19,3 +19,4 @@ runs:
       shell: bash
       run: |
         echo "SERVICE_NAME=$(echo '${{ inputs.services }}' | sed 's|.*/||')" >> "$GITHUB_OUTPUT"
+        echo SERVICE_NAME
