@@ -68,15 +68,31 @@ module "rds" {
   vpc_security_group_ids = [module.vpc.security_group["rds"]]
 }
 
-module "alb" {
-  source = "../../aws_modules/alb"
+# module "alb" {
+#   source = "../../aws_modules/alb"
+
+#   tags = local.tag
+#   public_subnets = [
+#                         module.vpc.subnets["public_subnet_1"], 
+#                         module.vpc.subnets["public_subnet_2"]
+#                       ]
+#   security_groups = [module.vpc.security_group["alb"]]
+#   vpc_id = module.vpc.vpc_id
+#   ec2_instances_ids = {
+#     instance1 = module.ec2.ec2_instances["instance1"],
+#     instance2 = module.ec2.ec2_instances["instance2"]
+#   }
+# }
+
+module "alb_private" {
+  source = "../../aws_modules/alb_private"
 
   tags = local.tag
-  public_subnets = [
-                        module.vpc.subnets["public_subnet_1"], 
-                        module.vpc.subnets["public_subnet_2"]
+  private_subnets = [
+                        module.vpc.subnets["private_subnet_1"], 
+                        module.vpc.subnets["private_subnet_2"]
                       ]
-  security_groups = [module.vpc.security_group["alb"]]
+  security_groups = [module.vpc.security_group["alb_private"]]
   vpc_id = module.vpc.vpc_id
   ec2_instances_ids = {
     instance1 = module.ec2.ec2_instances["instance1"],

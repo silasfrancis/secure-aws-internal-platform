@@ -3,7 +3,7 @@ resource "aws_vpc_security_group_ingress_rule" "ec2_ingress_rule_api" {
     from_port = 8080
     to_port = 8080
     ip_protocol = "tcp"
-    referenced_security_group_id = aws_security_group.alb.id
+    referenced_security_group_id = aws_security_group.alb_private.id
     tags = {
     Resource = "EC2"
   }
@@ -15,7 +15,7 @@ resource "aws_vpc_security_group_ingress_rule" "ec2_ingress_rule_app" {
     from_port = 3000
     to_port = 3000
     ip_protocol = "tcp"
-    referenced_security_group_id = aws_security_group.alb.id
+    referenced_security_group_id = aws_security_group.alb_private.id
     tags = {
     Resource = "EC2"
   }
