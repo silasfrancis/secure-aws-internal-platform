@@ -1,1 +1,1 @@
-{"service":"backend/fastapi","image_tag":"silasfrancis/devops-api-dev:318cc8c"}
+{"service":"frontend/react-recoil","image_tag":"silasfrancis/devops-client-dev:bd05eef"}
