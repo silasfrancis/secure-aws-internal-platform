@@ -7,8 +7,8 @@ inputs:
     required: true
 
 outputs:
-  services:
-    description: "List of services"
+  SERVICE_NAME:
+    description: "Cleaned service name"
     value: ${{ steps.svc.outputs.SERVICE_NAME }}
 
 runs:
@@ -19,4 +19,3 @@ runs:
       shell: bash
       run: |
         echo "SERVICE_NAME=$(echo '${{ inputs.services }}' | sed 's|.*/||')" >> "$GITHUB_OUTPUT"
-        echo $SERVICE_NAME
