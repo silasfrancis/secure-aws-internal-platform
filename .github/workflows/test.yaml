@@ -6,18 +6,6 @@ on:
           - Semgrep and OWASP Dependency-Check
         types:
             - completed
-    push:
-        branches:
-          - main
-          - dev
-    pull_request: 
-        branches:
-          - main
-          - dev
-        paths:
-          - 'frontend/react-recoil/**'
-          - 'backend/fastapi/**'
-    workflow_dispatch:
 
 jobs:
   filter-updated-directories:
