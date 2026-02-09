@@ -10,10 +10,10 @@ all:
       hosts:
         instance1:
           ansible_host: i-0054034de59167478
-    #     instance2:
-    #       ansible_host: i-0730e9c8a7c92e4ca
+        instance2:
+          ansible_host: i-0730e9c8a7c92e4ca
 
-    # wireguard:
-    #   hosts:
-    #     wg_instance:
-    #       ansible_host: i-06ae1a92439c6a567
+    wireguard:
+      hosts:
+        wg_instance:
+          ansible_host: i-06ae1a92439c6a567
