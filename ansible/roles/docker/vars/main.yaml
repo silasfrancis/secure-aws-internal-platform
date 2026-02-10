@@ -1,0 +1,9 @@
+env: dev
+
+docker_compose_files:
+  dev:
+    - docker_compose/dev/docker-compose.yaml
+  main:
+    - docker_compose/main/docker-compose.yaml
+
+aws_secret_id: basic_secrets

@@ -1,0 +1,80 @@
+name: Semgrep and OWASP Dependency-Check
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  filter-updated-directories:
+    uses: ./.github/workflows/filter_updated_dir.yaml
+
+  semgrep:
+    runs-on: ubuntu-24.04
+    if: ${{ needs.filter-updated-directories.outputs.dir_changed != '[]' && needs.filter-updated-directories.outputs.dir_changed != ''}}
+    needs: filter-updated-directories
+    strategy:
+        fail-fast: false
+        matrix:
+            dir_changed: ${{ fromJson(needs.filter-updated-directories.outputs.dir_changed) }}
+    permissions:
+      contents: read
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+    container:
+      image: semgrep/semgrep
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 
+
+        - name: Run Semgrep CI
+          run: semgrep scan --config auto ${{ matrix.dir_changed }}
+    
+  dependency-check:
+    runs-on: ubuntu-24.04
+    if: ${{ needs.filter-updated-directories.outputs.dir_changed != '[]' && needs.filter-updated-directories.outputs.dir_changed != ''}}
+    needs: filter-updated-directories
+    strategy:
+        fail-fast: false
+        matrix:
+            dir_changed: ${{ fromJson(needs.filter-updated-directories.outputs.dir_changed) }}
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 
+
+        - name: Install task
+          uses:  ./.github/actions/install_task
+        
+        - name: Install app dependencies
+          working-directory: ${{ matrix.dir_changed }}
+          run: |
+            task install_dependencies_ci
+
+        - name: Run OWASP Dependency-Check
+          uses: dependency-check/Dependency-Check_Action@main
+          id: Depcheck
+          with:
+            project: 'MyProject-${{ matrix.dir_changed }}'
+            path: '${{ matrix.dir_changed }}'
+            format: 'HTML'
+            out: 'reports'
+            args: >
+                --failOnCVSS 7
+                --enableRetired
+
+        - name: cleanup service name
+          id: svc
+          uses: ./.github/actions/cleanup_service_name
+          with:
+            services: ${{ matrix.dir_changed }}
+
+        - name: Upload Test results
+          uses: actions/upload-artifact@v4
+          with:
+            name: Depcheck-report-${{ steps.svc.outputs.SERVICE_NAME }}
+            path: ${{ github.workspace }}/reports

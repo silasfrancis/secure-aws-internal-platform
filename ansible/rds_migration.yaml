@@ -1,0 +1,65 @@
+- name: Run PostgreSQL migration on RDS
+  hosts: application
+  gather_facts: false
+  vars:
+    sql_dump_path: backend/postgres_db/sql/001_database_dump.sql
+    rds_identifier: my-db-instance
+    secret_id: my-db-secret
+    aws_region: us-east-2
+
+  tasks:
+
+    - name: Get RDS endpoint from AWS
+      shell: >
+        aws rds describe-db-instances
+        --db-instance-identifier {{ rds_identifier }}
+        --query "DBInstances[0].Endpoint.Address"
+        --output text
+        --region {{ aws_region }}
+      register: rds_host
+
+    - name: Set RDS endpoint fact
+      set_fact:
+        rds_endpoint: "{{ rds_host.stdout }}"
+
+    - name: Fetch database credentials from Secrets Manager
+      shell: >
+        aws secretsmanager get-secret-value
+        --secret-id {{ secret_id }}
+        --query SecretString
+        --output text
+        --region {{ aws_region }}
+      register: db_secret_raw
+
+    - name: Parse DB secrets
+      set_fact:
+        db_secrets: "{{ db_secret_raw.stdout | from_json }}"
+
+    - name: Ensure PostgreSQL client is installed
+      package:
+        name: postgresql-client
+        state: present
+      become: true
+
+    - name: Copy SQL dump to temporary location
+      copy:
+        src: "{{ sql_dump_path }}"
+        dest: /tmp/dump.sql
+        mode: '0644'
+
+    - name: Run PostgreSQL migration on RDS
+      shell: >
+        PGPASSWORD={{ db_secrets.DB_PASSWORD }}
+        psql -h {{ rds_endpoint }}
+             -U {{ db_secrets.DB_USER }}
+             -d {{ db_secrets.DB_NAME | default('postgres') }}
+             -f /tmp/dump.sql
+      environment:
+        PGHOST: "{{ rds_endpoint }}"
+        PGUSER: "{{ db_secrets.DB_USER }}"
+        PGPASSWORD: "{{ db_secrets.DB_PASSWORD }}"
+      register: migration_result
+
+    - name: Show migration output
+      debug:
+        var: migration_result.stdout

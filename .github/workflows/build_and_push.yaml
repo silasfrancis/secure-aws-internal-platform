@@ -1,0 +1,147 @@
+name: Build and Push Images to Docker Hub
+
+on:
+    workflow_run:
+      workflows:
+        - Semgrep and OWASP Dependency-Check
+      types:
+        - completed
+
+jobs:
+  filter-updated-directories:
+    uses: ./.github/workflows/filter_updated_dir.yaml
+
+
+  build-and-push:
+    runs-on: ubuntu-24.04
+    if: ${{ needs.filter-updated-directories.outputs.dir_changed != '[]' && needs.filter-updated-directories.outputs.dir_changed != ''}}
+    needs: filter-updated-directories
+    permissions:
+        contents: write
+        id-token: write
+    strategy:
+        fail-fast: false
+        matrix:
+            dir_changed: ${{ fromJson(needs.filter-updated-directories.outputs.dir_changed) }}
+    concurrency:
+      group: git-write-${{ github.ref_name }}-${{ matrix.dir_changed }}
+      cancel-in-progress: false
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 #v6.0.1
+
+        - name: Install task
+          uses:  ./.github/actions/install_task
+
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708
+          with:
+            role-to-assume: ${{ vars.AWS_SECRETS_ROLE_ARN }}
+            aws-region: us-east-2
+
+        - name: Load AWS creds from Secrets Manager
+          run: |
+            SECRET=$(aws secretsmanager get-secret-value \
+              --secret-id basic_secrets \
+              --query SecretString \
+              --output text)
+
+            echo "DOCKERHUB_USERNAME=$(echo $SECRET | jq -r .DOCKERHUB_USERNAME)" >> $GITHUB_ENV
+            echo "DOCKERHUB_TOKEN=$(echo $SECRET | jq -r .DOCKERHUB_TOKEN)" >> $GITHUB_ENV
+
+        - name: Auth to Docker Hub
+          if: ${{ !env.ACT }}
+          uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
+          with:
+              username: ${{ env.DOCKERHUB_USERNAME }}
+              password: ${{ env.DOCKERHUB_TOKEN }}
+        
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130
+
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+        
+        - name: Get image repo
+          id: get_image_repo
+          env: 
+            ENVIRONMENT: ${{ github.ref_name }}
+          run: |
+            IMAGE_REPO=$(task -t .github/workflows/utils/Taskfile.yaml generate-image-repo-${{ github.ref_name }} -- "${{ matrix.dir_changed }}" | tail -n 1)
+            echo "IMAGE_REPO=$IMAGE_REPO" >> $GITHUB_OUTPUT
+
+        - name: Compute image tags
+          id: image_tags
+          env: 
+            ENVIRONMENT: ${{ github.ref_name }}
+            SERVICE: ${{ matrix.dir_changed }}
+            IMAGE_REPOS: ${{ steps.get_image_repo.outputs.IMAGE_REPO }}
+          run: |
+            if [ "$ENVIRONMENT" = "main" ]; then
+              IMAGE_VERSION=$(task -t utils/Taskfile.yaml generate-version -- "${SERVICE}")
+              IMAGE_TAG=$(task -t utils/Taskfile.yaml generate-version-tag -- "${SERVICE}" "${IMAGE_REPOS}""${ENVIRONMENT}" | tail -n 1)
+            else
+              IMAGE_VERSION=$(task -t utils/Taskfile.yaml generate-extended-version -- "${SERVICE}")
+              IMAGE_TAG=$(task -t utils/Taskfile.yaml generate-extended-version-tag -- "${SERVICE}" "${IMAGE_REPOS}""${ENVIRONMENT}" | tail -n 1)
+            fi
+            echo "IMAGE_VERSION=$IMAGE_VERSION" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        
+        - name: Set docker image target
+          id: docker_target
+          env:
+            ENVIRONMENT: ${{ github.ref_name }}
+          run: |
+            if [ ${ENVIRONMENT} = "main" ]; then
+              echo "TARGET=production" >> $GITHUB_OUTPUT
+            elif [ ${ENVIRONMENT} = "dev" ]; then
+              echo "TARGET=dev" >> $GITHUB_OUTPUT
+            else
+              echo "TARGET=staging" >> $GITHUB_OUTPUT
+            fi
+
+        - name: Build and push image
+          uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+          with:
+            context: ${{matrix.dir_changed}}
+            push: ${{ !env.ACT }}
+            tags: ${{ steps.image_tags.outputs.IMAGE_TAG }}
+            target: ${{ steps.docker_target.outputs.TARGET }}
+            cache-from: type=gha
+            cache-to: type=gha,mode=max
+            
+        - name: Export service build info
+          id: export
+          run: |
+            echo "{\"service\":\"${{ matrix.dir_changed }}\",\"image_tag\":\"${{ steps.image_tags.outputs.IMAGE_TAG }}\"}" > output.json
+        
+        - name: cleanup service name
+          id: svc
+          uses: ./.github/actions/cleanup_service_name
+          with:
+            services: ${{ matrix.dir_changed }}
+
+        - name: Persist build info to repo
+          env:
+            SERVICE_NAME: ${{ steps.svc.outputs.SERVICE_NAME }}
+            ENVIRONMENT: ${{ github.ref_name }}
+            GIT_USER: ${{ github.actor }}
+            GIT_USER_EMAIL: ${{ vars.GIT_USER_EMAIL }}
+          run: |
+            set -e
+
+            TARGET_DIR="ansible/roles/docker/files/docker_compose/$ENVIRONMENT"
+
+            TARGET_FILE="$TARGET_DIR/$SERVICE_NAME.json"
+
+            mkdir -p "$TARGET_DIR"
+            mv output.json "$TARGET_FILE"
+
+            git config user.name "$GIT_USER"
+            git config user.email "$GIT_USER_EMAIL"
+
+            git add "$TARGET_FILE"
+            git commit -m "ci: update build info for $SERVICE_NAME ($ENVIRONMENT)" || echo "No changes to commit"
+            git pull --rebase origin ${{ github.ref_name }}
+            git push origin ${{ github.ref_name }}
+

@@ -1,0 +1,100 @@
+name: Update Docker Compose Images
+
+on:
+    workflow_run:
+        workflows:
+            - Scan Container Images
+        types:
+            - completed
+
+jobs:
+  filter-updated-directories:
+    uses: ./.github/workflows/filter_updated_dir.yaml
+            
+  update-gitops:
+    runs-on: ubuntu-24.04
+    if: ${{ needs.filter-updated-directories.outputs.dir_changed != '[]' && needs.filter-updated-directories.outputs.dir_changed != ''}}
+    needs: filter-updated-directories
+    permissions:
+      contents: write
+    strategy:
+        fail-fast: false
+        matrix:
+            dir_changed: ${{ fromJson(needs.filter-updated-directories.outputs.dir_changed) }}
+    concurrency:
+      group: git-write-${{ github.ref_name }}-${{ matrix.dir_changed }}
+      cancel-in-progress: false
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 #v6.0.1
+        
+        - name: Setup jq and yq
+          uses: ./.github/actions/install_jq_yp
+
+        - name: cleanup service name
+          id: svc
+          uses: ./.github/actions/cleanup_service_name
+          with:
+            services: ${{ matrix.dir_changed }}
+
+        - name: Update docker compose values for all services
+          id: update_docker_compose_values
+          run: | 
+            ENVIRONMENT="${{ github.ref_name }}"
+            SERVICE_NAME="${{ steps.svc.outputs.SERVICE_NAME }}"
+            TARGET_DIR="ansible/roles/docker/files/docker_compose/$ENVIRONMENT"
+            VALUES_FILE="$TARGET_DIR/docker-compose.yaml"
+            TARGET_FILE="$TARGET_DIR/$SERVICE_NAME.json"
+            
+            echo $VALUES_FILE
+            echo $TARGET_FILE
+            echo "VALUES_FILE=$VALUES_FILE" >> $GITHUB_OUTPUT
+
+              SERVICE=$(jq -r '.service' "$TARGET_FILE")
+              IMAGE_TAG=$(jq -r '.image_tag' "$TARGET_FILE")
+
+              echo "Processing: $TARGET_FILE"
+              echo "Service: $SERVICE"
+              echo "Image Tag: $IMAGE_TAG"
+
+              echo "Updating $SERVICE -> $IMAGE_TAG"
+
+              # Update image values using yq
+              if [[ "$SERVICE" == *"fastapi"* ]]; then
+                CURRENT=$(yq '.fast_api.image' "$VALUES_FILE")
+                echo "Current fastapi image: $CURRENT"
+                yq -i '.fast_api.image = "'"$IMAGE_TAG"'"' "$VALUES_FILE"
+              elif [[ "$SERVICE" == *"react-recoil"* ]]; then
+                CURRENT=$(yq '.react_app.image' "$VALUES_FILE")
+                echo "Current react app image: $CURRENT"
+                yq -i '.react_app.image = "'"$IMAGE_TAG"'"' "$VALUES_FILE"
+              else
+                echo "Unknown service: $SERVICE, skipping"
+              fi
+            done
+
+            echo "Contents after update:"
+            cat "$VALUES_FILE"
+
+            echo "Git diff:"
+            git diff "$VALUES_FILE"
+          
+        - name: Commit and push Helm updates
+          env: 
+            GIT_USER: ${{ github.actor }}
+            GIT_USER_EMAIL: ${{ vars.GIT_USER_EMAIL }}
+          run: |
+                VALUES_FILE="${{ steps.update_docker_compose_values.outputs.VALUES_FILE }}"
+                git config user.name "$GIT_USER"
+                git config user.email "$GIT_USER_EMAIL"
+
+                echo "Staging changes..."
+                git add "$VALUES_FILE"
+
+                if git diff --cached --quiet; then
+                  echo "No changes to commit"
+                else
+                  git commit -m "Update Helm images for ${{ github.ref_name }}"
+                  git pull --rebase origin ${{ github.ref_name }}
+                  git push https://x-access-token:${{github.token}}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
+                fi

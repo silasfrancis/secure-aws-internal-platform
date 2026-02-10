@@ -1,0 +1,48 @@
+version: "3"
+
+tasks:
+  generate-image-repo-dev:
+    vars:
+      SERVICE: "{{.CLI_ARGS}}"
+    cmds:
+      - |
+        echo "Service argument passed: {{.SERVICE}}" 
+
+        case "{{.SERVICE}}" in
+          "backend/fastapi")
+            echo "silasfrancis/devops-api-"
+            ;;
+          "backend/postgres_db")
+            echo "silasfrancis/db-migration-"
+            ;;
+          "frontend/react-recoil")
+            echo "silasfrancis/devops-client-"
+            ;;
+          *)
+            echo "Unknown service: {{.SERVICE}}"
+            exit 1
+            ;;
+        esac
+
+  generate-image-repo-main:
+    vars:
+      SERVICE: "{{.CLI_ARGS}}"
+    cmds:
+      - |
+        echo "Service argument passed: {{.SERVICE}}"  
+
+        case "{{.SERVICE}}" in
+          "backend/fastapi")
+            echo "silasfrancis/devops-api-"
+            ;;
+          "backend/postgres_db")
+            echo "silasfrancis/db-migration-"
+            ;;
+          "frontend/react-recoil")
+            echo "silasfrancis/devops-client-"
+            ;;
+          *)
+            echo "Unknown service: {{.SERVICE}}"
+            exit 1
+            ;;
+        esac
