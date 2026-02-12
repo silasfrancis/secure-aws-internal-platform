@@ -228,6 +228,3 @@ Detailed architecture and security documentation is provided in the `docs/` dire
 
 - `docs/architecture.md` – System architecture, infrastructure components, and data flows
 - `docs/security.md` – Security model, IAM design, policy-as-code enforcement, and threat mitigation
-
-```
-
