@@ -1,5 +1,6 @@
 - name: Run PostgreSQL migration on RDS
   hosts: application
+  become: true
   gather_facts: false
   vars:
     sql_dump_path: backend/postgres_db/sql/001_database_dump.sql
