@@ -1,11 +1,17 @@
 - name: Run PostgreSQL migration on RDS
   hosts: application
+  become: true
   gather_facts: false
   vars:
     sql_dump_path: backend/postgres_db/sql/001_database_dump.sql
     rds_identifier: silas-dev-postgres
     secret_id: basic_secrets
     aws_region: us-east-2
+
+  pre_tasks:
+    - name: Update package manager cache
+      package:
+        update_cache: yes
 
   tasks:
     - name: Install required packages
@@ -81,11 +87,7 @@
 
     - name: Run PostgreSQL migration on RDS
       shell: >
-        PGPASSWORD={{ db_secrets.DB_PASSWORD }}
-        psql -h {{ rds_endpoint }}
-             -U {{ db_secrets.DB_USER }}
-             -d {{ db_secrets.DB_NAME | default('postgres') }}
-             -f /tmp/dump.sql
+        PGPASSWORD={{ db_secrets.DB_PASSWORD }} psql -h {{ rds_endpoint }} -U {{ db_secrets.DB_USER }} -d {{ db_secrets.DB_NAME | default('postgres') }} -f /tmp/dump.sql
       environment:
         PGHOST: "{{ rds_endpoint }}"
         PGUSER: "{{ db_secrets.DB_USER }}"
