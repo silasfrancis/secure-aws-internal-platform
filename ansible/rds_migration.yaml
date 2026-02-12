@@ -3,11 +3,43 @@
   gather_facts: false
   vars:
     sql_dump_path: backend/postgres_db/sql/001_database_dump.sql
-    rds_identifier: my-db-instance
-    secret_id: my-db-secret
+    rds_identifier: silas-dev-postgres
+    secret_id: basic_secrets
     aws_region: us-east-2
 
   tasks:
+    - name: Install required packages
+      package:
+        name:
+          - unzip
+          - curl
+        state: present
+
+    - name: Download AWS CLI v2
+      get_url:
+        url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+        dest: /tmp/awscliv2.zip
+        mode: '0644'
+
+    - name: Unzip AWS CLI installer
+      unarchive:
+        src: /tmp/awscliv2.zip
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Install AWS CLI
+      command: /tmp/aws/install
+      args:
+        creates: /usr/local/bin/aws
+
+    - name: Verify AWS CLI installation
+      command: aws --version
+      register: aws_version
+      changed_when: false
+
+    - name: Display AWS CLI version
+      debug:
+        msg: "{{ aws_version.stdout }}"
 
     - name: Get RDS endpoint from AWS
       shell: >
