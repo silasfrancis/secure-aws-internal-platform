@@ -87,11 +87,7 @@
 
     - name: Run PostgreSQL migration on RDS
       shell: >
-        PGPASSWORD={{ db_secrets.DB_PASSWORD }}
-        psql -h {{ rds_endpoint }}
-             -U {{ db_secrets.DB_USER }}
-             -d {{ db_secrets.DB_NAME | default('postgres') }}
-             -f /tmp/dump.sql
+        PGPASSWORD={{ db_secrets.DB_PASSWORD }} psql -h {{ rds_endpoint }} -U {{ db_secrets.DB_USER }} -d {{ db_secrets.DB_NAME | default('postgres') }} -f /tmp/dump.sql
       environment:
         PGHOST: "{{ rds_endpoint }}"
         PGUSER: "{{ db_secrets.DB_USER }}"
