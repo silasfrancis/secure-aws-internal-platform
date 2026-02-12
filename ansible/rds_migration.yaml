@@ -7,6 +7,11 @@
     secret_id: basic_secrets
     aws_region: us-east-2
 
+  pre_tasks:
+    - name: Update package manager cache
+      package:
+        update_cache: yes
+
   tasks:
     - name: Install required packages
       package:
