@@ -91,7 +91,7 @@ jobs:
                 echo "Staging changes..."
                 git add "$VALUES_FILE"
 
-                if git diff --cached --quiet; then
+                if git diff --quiet; then
                   echo "No changes to commit"
                 else
                   git commit -m "Update Helm images for ${{ github.ref_name }}"
