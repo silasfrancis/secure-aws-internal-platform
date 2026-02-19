@@ -94,7 +94,7 @@ jobs:
                 if git diff --quiet; then
                   echo "No changes to commit"
                 else
-                  git commit -m "Update Helm images for ${{ github.ref_name }}"
+                  git commit -m "Update Docker image ${{ github.ref_name }}"
                   git pull --rebase origin ${{ github.ref_name }}
                   git push https://x-access-token:${{github.token}}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
                 fi
