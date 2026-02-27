@@ -71,7 +71,6 @@ jobs:
               else
                 echo "Unknown service: $SERVICE, skipping"
               fi
-            done
 
             echo "Contents after update:"
             cat "$VALUES_FILE"
