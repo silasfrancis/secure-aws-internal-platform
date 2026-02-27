@@ -1,5 +1,7 @@
 # Architecture
 
+> **Note**: For security-specific details, see [security.md](security.md). For getting started, see the [root README](../README.md).
+
 This document describes the architecture of the **Secure AWS Application Deployment Platform**, focusing on infrastructure layout, traffic flow, and platform responsibilities.
 
 The platform is designed as an **internal-only application environment**, prioritizing security, auditability, and reproducibility over public accessibility.
@@ -135,3 +137,8 @@ Running Applications on EC2
 - VPN-based access prioritizes security over convenience
 - Separate provisioning and configuration layers improve auditability
 - Internal-only design reduces attack surface significantly
+
+## Related Documentation
+
+- [← Back to README](../README.md)
+- [security.md→](security.md)

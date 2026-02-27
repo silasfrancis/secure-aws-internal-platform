@@ -1,5 +1,7 @@
 # Security Model
 
+> **Note**: For architectural context, see [architecture.md](architecture.md). For getting started, see the [root README](../README.md).
+
 This document outlines the security principles, controls, and enforcement mechanisms used throughout the platform.
 
 The system follows a **defense-in-depth** approach, with multiple layers of security across CI, infrastructure, networking, and runtime environments.
@@ -128,3 +130,8 @@ This security model ensures:
 - Automated, enforceable security controls
 - Minimal attack surface
 - Full traceability across CI, infrastructure, and runtime
+
+## Related Documentation
+
+- [← Back to README](../README.md)
+- [← architecture.md](architecture.md)
