@@ -42,6 +42,7 @@ resource "aws_instance" "wireguard_server" {
   vpc_security_group_ids  = var.wireguard_security_group_id
   iam_instance_profile = data.aws_iam_instance_profile.global_iam_instance_profile.name    
   associate_public_ip_address = true
+  source_dest_check = false
   tags = {
     Name = "${var.tags}-wireguard-server"
   }
