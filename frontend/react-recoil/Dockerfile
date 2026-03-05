@@ -11,10 +11,8 @@ RUN --mount=type=cache,target=/app/.yarn_cache \
 
 COPY . .
 
-# Build the app
 RUN yarn build
 
-# Install serve globally with yarn
 RUN yarn global add serve
 
 EXPOSE 3000
@@ -31,10 +29,8 @@ RUN --mount=type=cache,target=/app/.yarn_cache \
 
 COPY . .
 
-# Build the app
 RUN yarn build
 
-# Install serve globally with yarn
 RUN yarn global add serve
 
 EXPOSE 3000

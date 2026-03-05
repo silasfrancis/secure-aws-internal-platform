@@ -63,7 +63,6 @@ jobs:
 
             echo "AWS_ACCESS_KEY_ID=$(echo $SECRET | jq -r .AWS_ACCESS_KEY_ID)" >> $GITHUB_ENV
             echo "AWS_SECRET_ACCESS_KEY=$(echo $SECRET | jq -r .AWS_SECRET_ACCESS_KEY)" >> $GITHUB_ENV
-            echo "AWS_SESSION_TOKEN=$(echo $SECRET | jq -r .AWS_SESSION_TOKEN)" >> $GITHUB_ENV
             echo "AWS_REGION=us-east-2" >> $GITHUB_ENV
 
         - name: Terraform Plan
