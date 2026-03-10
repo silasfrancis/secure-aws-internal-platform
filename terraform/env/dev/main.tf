@@ -1,7 +1,7 @@
 terraform {
   
     backend "s3" {
-    bucket = "silas-dev-silas-main"
+    bucket = "silas-dev-silas-dev"
     key = "dev/terraform.tfstate"
     region = "us-east-2"
     use_lockfile = true
