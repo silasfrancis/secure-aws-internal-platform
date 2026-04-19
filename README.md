@@ -1,6 +1,6 @@
 # Secure AWS Application Deployment with Ansible, WireGuard, Nginx, and Policy as Code
 
-A production-grade internal application platform deployed on AWS EC2 using Terraform and Ansible, with strong emphasis on network isolation, zero-trust access, and policy-as-code enforcement across infrastructure and CI.
+An internal application platform deployed on AWS EC2 using Terraform and Ansible, with strong emphasis on network isolation, zero-trust access, and policy-as-code enforcement across infrastructure and CI.
 
 The platform runs a FastAPI backend and React frontend in Docker containers across multiple EC2 instances, fronted by an internal load balancer and accessible **only through a WireGuard VPN**.
 
